@@ -1,0 +1,7 @@
+filsem: filsem.o
+	gcc filsem.o -o filsem
+filsem.o: filsem.c
+	gcc -c filsem.c 
+
+clean:
+	rm *.o filsem
