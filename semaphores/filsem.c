@@ -31,11 +31,10 @@ void *filosofar(void *arg)
     int id = *(int *) arg;
     int esquerda = id;
     int direita = (id + 1) % n;
+    sleep(rand() % (TEMPO_MAX + 1));
     while(1)
-    {        
-        sleep(rand() % (TEMPO_MAX + 1));
-        atualizarStatus('H', id);
-
+    {       
+        atualizarStatus('H', id); 
         sem_wait(&cadeiras);
 
         sem_wait(garfos + esquerda);
@@ -43,13 +42,14 @@ void *filosofar(void *arg)
 
         atualizarStatus('E', id);
         sleep(rand() % (TEMPO_MAX + 1));
-        atualizarStatus('T', id);
-        sleep(rand() % (TEMPO_MAX + 1));
 
         sem_post(garfos + esquerda);
         sem_post(garfos + direita);
 
         sem_post(&cadeiras);
+
+        atualizarStatus('T', id);
+        sleep(rand() % (TEMPO_MAX + 1));
     }
 
 }

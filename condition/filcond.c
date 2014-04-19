@@ -6,7 +6,7 @@
 #define TEMPO_MAX 10
 
 int n;
-int garfosLivres;
+unsigned int* ugarfoLivre;
 pthread_cond_t *garfoLivre;
 pthread_mutex_t *mutex;
 pthread_mutex_t mutexStatus;
@@ -38,47 +38,46 @@ void *filosofar(void *arg)
     }
     else
     {
-        int esquerda = id;
-        int direita = (id + 1) % n;
+        esquerda = id;
+        direita = (id + 1) % n;
     }
 
+    sleep(rand() % (TEMPO_MAX + 1));
     while(1)
-    {        
-        sleep(rand() % (TEMPO_MAX + 1));
-        atualizarStatus('H', id);
+    {      
+        atualizarStatus('H', id);  
 
-        //sem_wait(&cadeiras);
-
-        pthread_mutex_lock(mutex);
-        while (garfosLivres == 0)
+        pthread_mutex_lock(mutex + esquerda);
+        if(*(ugarfoLivre + esquerda))
+            *(ugarfoLivre + esquerda) = 0;
+        else
         {
-            pthread_cond_wait(garfoLivre + esquerda, mutex);
-            pthread_mutex_lock(mutex);
-            while (garfosLivres == 0)
-                pthread_cond_wait(garfoLivre + direita, mutex + direita);
+            pthread_cond_wait(garfoLivre + esquerda, mutex + esquerda);
+            *(ugarfoLivre + esquerda) = 0;
         }
-
-        pthread_mutex_lock(mutex);
-        garfosLivres--;
-        pthread_mutex_unlock(mutex);
-
+            
+        pthread_mutex_lock(mutex + direita);
+        if(*(ugarfoLivre + direita))
+            *(ugarfoLivre + direita) = 0;
+        else
+        {
+            pthread_cond_wait(garfoLivre + direita, mutex + direita);
+            *(ugarfoLivre + direita) = 0;
+        }
+            
         atualizarStatus('E', id);
         sleep(rand() % (TEMPO_MAX + 1));
 
-        pthread_mutex_lock(mutex);
-        garfosLivres++;
-        pthread_mutex_unlock(mutex);
+        *(ugarfoLivre + esquerda) = 1;
+        *(ugarfoLivre + direita) = 1;
+
+        pthread_cond_signal(garfoLivre + esquerda);
+        pthread_mutex_unlock(mutex + esquerda);
+        pthread_cond_signal(garfoLivre + direita);
+        pthread_mutex_unlock(mutex + direita);
 
         atualizarStatus('T', id);
         sleep(rand() % (TEMPO_MAX + 1));
-
-        pthread_cond_signal(garfoLivre + esquerda);
-        pthread_mutex_unlock(mutex);
-        pthread_cond_signal(garfoLivre + direita);
-        pthread_mutex_unlock(mutex);
-
-
-        //sem_post(&cadeiras);
     }
 
 }
@@ -103,14 +102,16 @@ int main(int argc, char *argv[])
     garfoLivre = (pthread_cond_t *)malloc(n * sizeof(pthread_cond_t));
     mutex = (pthread_mutex_t *)malloc(n * sizeof(pthread_mutex_t));
     status = (char *)malloc(n * sizeof(char));
+    ugarfoLivre = (unsigned int*)malloc(n * sizeof(unsigned int));
     pthread_mutex_init(&mutexStatus, NULL);
-    int i, id[n], garfosLivres = n;
+    int i, id[n];
     for(i = 0; i < n; i++)
     {
         pthread_cond_init(garfoLivre + i, NULL);
         pthread_mutex_init(mutex + i, NULL);
         *(status + i) = 'T';
         id[i] = i;
+        *(ugarfoLivre + i) = 1;
     }
     for(i = 0; i < n; i++)
         pthread_create(filosofo+i, NULL, filosofar, id+i);
