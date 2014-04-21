@@ -6,7 +6,7 @@
 #define TEMPO_MAX 10
 
 int n;
-unsigned int* ugarfoLivre;
+unsigned *ugarfoLivre;
 pthread_cond_t *garfoLivre;
 pthread_mutex_t *mutex;
 pthread_mutex_t mutexStatus;
@@ -102,7 +102,7 @@ int main(int argc, char *argv[])
     garfoLivre = (pthread_cond_t *)malloc(n * sizeof(pthread_cond_t));
     mutex = (pthread_mutex_t *)malloc(n * sizeof(pthread_mutex_t));
     status = (char *)malloc(n * sizeof(char));
-    ugarfoLivre = (unsigned int*)malloc(n * sizeof(unsigned int));
+    ugarfoLivre = (unsigned*)malloc(n * sizeof(unsigned));
     pthread_mutex_init(&mutexStatus, NULL);
     int i, id[n];
     for(i = 0; i < n; i++)
